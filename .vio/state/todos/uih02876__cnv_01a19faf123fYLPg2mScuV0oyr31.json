@@ -1,0 +1,60 @@
+{
+  "todos": [
+    {
+      "id": "td_54735101",
+      "content": "文献、综述、开题报告（已更正龚善要刊名为《东方法学》）",
+      "status": "completed",
+      "priority": "medium"
+    },
+    {
+      "id": "td_e0c9d89d",
+      "content": "从国家法律法规数据库下载6部法律并整理知识库（1706条，校验通过）",
+      "status": "completed",
+      "priority": "medium"
+    },
+    {
+      "id": "td_78a31213",
+      "content": "法条数据导入系统（dev H2 + MySQL 脚本）",
+      "status": "completed",
+      "priority": "medium"
+    },
+    {
+      "id": "td_19291718",
+      "content": "测试集预期法律依据标注（46/50，4题知识库未覆盖）",
+      "status": "completed",
+      "priority": "medium"
+    },
+    {
+      "id": "td_7da9dc0b",
+      "content": "验证本机可访问 api.coze.cn（需 Windows-ROOT 证书库）",
+      "status": "completed",
+      "priority": "medium"
+    },
+    {
+      "id": "td_4806af86",
+      "content": "用户：注册 coze.cn 并搭建发布智能体，提供 bot_id + 令牌（唯一阻塞项）",
+      "status": "in_progress",
+      "priority": "medium"
+    },
+    {
+      "id": "td_34d6e35a",
+      "content": "真实 Coze 联调",
+      "status": "pending",
+      "priority": "medium"
+    },
+    {
+      "id": "td_9e9baff4",
+      "content": "智能体效果实测 + 评判",
+      "status": "pending",
+      "priority": "medium"
+    },
+    {
+      "id": "td_f7195f19",
+      "content": "论文撰写与排版",
+      "status": "pending",
+      "priority": "medium"
+    }
+  ],
+  "updated_at": 1793686685.3349242,
+  "version": 1
+}

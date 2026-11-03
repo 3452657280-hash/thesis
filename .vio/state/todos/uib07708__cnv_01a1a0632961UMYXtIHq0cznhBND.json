@@ -1,0 +1,36 @@
+{
+  "todos": [
+    {
+      "id": "td_2dc2aa15",
+      "content": "补全3篇🟡文献（王禄生、龚善要页码，银莉卷期页）",
+      "status": "in_progress",
+      "priority": "medium"
+    },
+    {
+      "id": "td_268a44e9",
+      "content": "系统页面截图（咨询/法条/律师/管理端）并插入论文",
+      "status": "pending",
+      "priority": "medium"
+    },
+    {
+      "id": "td_70c44be9",
+      "content": "扣子平台截图（知识库/编排/调试）——尝试用你已登录的浏览器",
+      "status": "pending",
+      "priority": "medium"
+    },
+    {
+      "id": "td_93c9563d",
+      "content": "按学校模板生成封面、诚信声明书、授权书",
+      "status": "pending",
+      "priority": "medium"
+    },
+    {
+      "id": "td_16c32bf2",
+      "content": "重新生成论文并核对",
+      "status": "pending",
+      "priority": "medium"
+    }
+  ],
+  "updated_at": 1793696066.6467273,
+  "version": 1
+}

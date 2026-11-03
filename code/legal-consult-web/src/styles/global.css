@@ -1,0 +1,127 @@
+:root {
+  --el-color-primary: #1f4e79;
+  --el-color-primary-light-3: #62839f;
+  --el-color-primary-light-5: #8fa7bc;
+  --el-color-primary-light-7: #bccad7;
+  --el-color-primary-light-8: #d2dce4;
+  --el-color-primary-light-9: #e9edf2;
+  --el-color-primary-dark-2: #193e61;
+  --law-blue: #1f4e79;
+  --law-bg: #f4f6f9;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+  color: #303133;
+  background: var(--law-bg);
+}
+
+.page-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 1px 4px rgba(0, 21, 41, 0.06);
+}
+
+.page-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--law-blue);
+  margin: 0 0 16px;
+  padding-left: 10px;
+  border-left: 4px solid var(--law-blue);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.pager {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.markdown-body {
+  line-height: 1.75;
+  word-break: break-word;
+  font-size: 14px;
+}
+
+.markdown-body p {
+  margin: 6px 0;
+}
+
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4 {
+  margin: 12px 0 6px;
+  color: var(--law-blue);
+}
+
+.markdown-body h1 { font-size: 18px; }
+.markdown-body h2 { font-size: 17px; }
+.markdown-body h3 { font-size: 16px; }
+.markdown-body h4 { font-size: 15px; }
+
+.markdown-body ul,
+.markdown-body ol {
+  padding-left: 22px;
+  margin: 6px 0;
+}
+
+.markdown-body blockquote {
+  margin: 8px 0;
+  padding: 4px 12px;
+  color: #606266;
+  border-left: 3px solid #bccad7;
+  background: #f5f7fa;
+}
+
+.markdown-body code {
+  background: #f2f3f5;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 13px;
+}
+
+.markdown-body pre {
+  background: #f6f8fa;
+  padding: 10px;
+  border-radius: 6px;
+  overflow-x: auto;
+}
+
+.markdown-body pre code {
+  background: none;
+  padding: 0;
+}
+
+.markdown-body table {
+  border-collapse: collapse;
+  margin: 8px 0;
+}
+
+.markdown-body th,
+.markdown-body td {
+  border: 1px solid #dcdfe6;
+  padding: 4px 10px;
+}
+
+.markdown-body a {
+  color: var(--law-blue);
+}

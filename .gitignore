@@ -1,0 +1,19 @@
+# 依赖与构建产物（可再生成，不进仓库）
+node_modules/
+.venv/
+venv/
+target/
+dist/
+.vite/
+__pycache__/
+*.pyc
+
+# 编辑器 / 系统
+.idea/
+.vscode/
+.DS_Store
+__MACOSX/
+
+# 系统垃圾
+Thumbs.db
+desktop.ini
