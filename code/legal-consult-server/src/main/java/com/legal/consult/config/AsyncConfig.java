@@ -12,9 +12,10 @@ public class AsyncConfig {
     @Bean(name = "chatExecutor")
     public ThreadPoolTaskExecutor chatExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(8);
-        executor.setMaxPoolSize(32);
+        executor.setCorePoolSize(64);
+        executor.setMaxPoolSize(64);
         executor.setQueueCapacity(100);
+        executor.setAllowCoreThreadTimeOut(true);
         executor.setKeepAliveSeconds(60);
         executor.setThreadNamePrefix("chat-");
         executor.setRejectedExecutionHandler(new ThreadPoolExecutor.AbortPolicy());

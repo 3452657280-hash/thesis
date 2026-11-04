@@ -19,7 +19,18 @@ import thesis_content as C
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FIG = os.path.join(ROOT, "交付", "论文图片")
-CITE = re.compile(r"(\[\d+(?:\]\[\d+)*\])")
+CITE = re.compile(r"(\[\d+(?:[，,～~-]\d+)*\])")
+MULTI = re.compile(r"(?:\[\d+\]){2,}")
+
+
+def group_cites(s):
+    """[4][5] → [4，5]；[3][4][5] → [3～5]（按手册示例写法）。"""
+    def rep(m):
+        ns = [int(x) for x in re.findall(r"\d+", m.group(0))]
+        if len(ns) >= 3 and ns == list(range(ns[0], ns[0] + len(ns))):
+            return f"[{ns[0]}～{ns[-1]}]"
+        return "[" + "，".join(map(str, ns)) + "]"
+    return MULTI.sub(rep, s)
 SZ = {"小二": 18, "小三": 15, "四号": 14, "小四": 12, "五号": 10.5, "小五": 9}
 
 
@@ -49,7 +60,7 @@ def pfmt(p, spacing=1.25, indent=None, before=0, after=0, align=None):
 
 
 def add_text(p, s, size=12, cn="宋体", bold=False):
-    for part in CITE.split(s):
+    for part in CITE.split(group_cites(s)):
         if not part:
             continue
         r = p.add_run(part)
@@ -61,7 +72,8 @@ def add_text(p, s, size=12, cn="宋体", bold=False):
 def heading(doc, s, level):
     p = doc.add_paragraph()
     if level == 1:
-        pfmt(p, 1.25, before=12, after=12, align=WD_ALIGN_PARAGRAPH.CENTER)
+        center = not re.match(r"\d", s)
+        pfmt(p, 1.25, before=12, after=12, align=WD_ALIGN_PARAGRAPH.CENTER if center else WD_ALIGN_PARAGRAPH.LEFT)
         font(p.add_run(s), "黑体", SZ["小三"], True)
         p.style = doc.styles["Heading 1"]
     elif level == 2:
@@ -174,18 +186,19 @@ def header_footer(section, text, page_numbers):
     fp = section.footer.paragraphs[0]
     fp.text = ""
     fp.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    if page_numbers:
-        r = fp.add_run()
-        font(r, "宋体", SZ["小五"])
-        for tag, txt in (("begin", None), (None, "PAGE"), ("end", None)):
-            if tag:
-                el = OxmlElement("w:fldChar")
-                el.set(qn("w:fldCharType"), tag)
-            else:
-                el = OxmlElement("w:instrText")
-                el.set(qn("xml:space"), "preserve")
-                el.text = txt
-            r._r.append(el)
+    if not page_numbers:
+        return
+    r = fp.add_run()
+    font(r, "宋体", SZ["小五"])
+    for tag, txt in (("begin", None), (None, "PAGE"), ("end", None)):
+        if tag:
+            el = OxmlElement("w:fldChar")
+            el.set(qn("w:fldCharType"), tag)
+        else:
+            el = OxmlElement("w:instrText")
+            el.set(qn("xml:space"), "preserve")
+            el.text = txt
+        r._r.append(el)
 
 
 def page_setup(section):
@@ -198,6 +211,17 @@ def page_setup(section):
 
 COVER = [("学       院", "未来技术学院"), ("专       业", "智能科学与技术"), ("学       号", ""),
          ("学 生 姓 名", ""), ("指 导 教 师", "            职称")]
+
+
+def load_cover():
+    import json
+    path = os.path.join(ROOT, "资料", "cover_fields.json")
+    if os.path.exists(path):
+        data = json.load(open(path, encoding="utf-8"))
+        return [("学       院", data.get("college", "未来技术学院")), ("专       业", data.get("major", "智能科学与技术")),
+                ("学       号", data.get("student_id", "")), ("学 生 姓 名", data.get("name", "")),
+                ("指 导 教 师", f"{data.get('supervisor', '')}    {data.get('supervisor_title', '职称')}")]
+    return COVER
 
 
 def blank(doc, n):
@@ -217,13 +241,14 @@ def front_matter(doc, sec):
     pfmt(p, 1.0, align=WD_ALIGN_PARAGRAPH.CENTER)
     font(p.add_run(C.TITLE), "宋体", SZ["小二"], True)
     blank(doc, 4)
-    for label, val in COVER:
+    for label, val in load_cover():
         p = doc.add_paragraph()
         pfmt(p, 1.5, align=WD_ALIGN_PARAGRAPH.CENTER)
         font(p.add_run(label + "    "), "宋体", 16, True)
-        r = p.add_run(val.center(18, "\u3000") if val.strip() else "\u3000" * 9)
+        val = val.strip()
+        r = p.add_run(val if val else "\u3000" * 9)
         font(r, "宋体", 16, True)
-        r.underline = True
+        r.underline = not bool(val)
     blank(doc, 5)
     p = doc.add_paragraph()
     pfmt(p, 1.0, align=WD_ALIGN_PARAGRAPH.CENTER)
@@ -252,10 +277,12 @@ def front_matter(doc, sec):
     pfmt(p, 1.5, indent=28)
     font(p.add_run("本毕业论文作者完全了解学校有关保留、使用毕业论文的规定，同意学校保留并向国家有关部门或机构送交论文的复印件和电子版，允许论文被查阅和借阅。本人授权江西应用科技学院可以将本论文的全部或部分内容编入有关数据库进行检索，可以采用影印、缩印或扫描等复制手段保存和汇编本毕业论文。"), "宋体", 14)
     blank(doc, 1)
-    for s in ("作者签名：                     日期：", "导师签名：                     日期："):
-        p = doc.add_paragraph()
-        pfmt(p, 1.5, indent=56)
-        font(p.add_run(s), "宋体", 14)
+    p = doc.add_paragraph()
+    pfmt(p, 1.5, indent=56)
+    font(p.add_run("作者签名：                     日期："), "宋体", 14)
+    p = doc.add_paragraph()
+    pfmt(p, 1.5, indent=56)
+    font(p.add_run("导师签名：                     日期："), "宋体", 14)
 
 
 def restart_numbering(section):
@@ -263,6 +290,7 @@ def restart_numbering(section):
     pg = OxmlElement("w:pgNumType")
     pg.set(qn("w:start"), "1")
     sectPr.append(pg)
+
 
 
 def toc(doc):
@@ -280,8 +308,6 @@ def toc(doc):
             el.set(qn("xml:space"), "preserve")
             el.text = txt
         r._r.append(el)
-    r2 = p.add_run("（打开文档后右键此处选择“更新域”，或按 F9 生成目录）")
-    font(r2, "宋体", SZ["小四"])
     end = OxmlElement("w:fldChar")
     end.set(qn("w:fldCharType"), "end")
     p.add_run()._r.append(end)
@@ -293,6 +319,21 @@ def count_body():
         if item[0] in ("p", "h1", "h2", "h3"):
             n += len(re.sub(r"\s", "", CITE.sub("", item[1])))
     return n
+
+
+def renumber_citations():
+    """按正文首次出现顺序重排参考文献编号（手册：序号以第一次出现的位置为准）。"""
+    order = []
+    for item in C.BODY:
+        if item[0] == "p":
+            for m in re.finditer(r"\[(\d+)\]", item[1]):
+                k = int(m.group(1))
+                if k not in order:
+                    order.append(k)
+    mp = {old: new for new, old in enumerate(order, 1)}
+    C.REFS = [C.REFS[old - 1] for old in order]
+    C.BODY = [(it[0], re.sub(r"\[(\d+)\]", lambda m: f"[{mp[int(m.group(1))]}]", it[1])) + tuple(it[2:])
+              if it[0] == "p" else it for it in C.BODY]
 
 
 def check_citations():
@@ -322,6 +363,27 @@ def build(out):
     sec = doc.sections[0]
     page_setup(sec)
     front_matter(doc, sec)
+    sec = doc.add_section(WD_SECTION.NEW_PAGE)
+    header_footer(sec, "目录", False)
+    p = doc.add_paragraph()
+    pfmt(p, 1.0, align=WD_ALIGN_PARAGRAPH.CENTER)
+    font(p.add_run("目        录"), "黑体", SZ["小二"], True)
+    p = doc.add_paragraph()
+    pfmt(p, 1.0)
+    fld = p.add_run()
+    for tag, instr in (("begin", None), (None, 'TOC \\o "1-2" \\h \\z \\u'), ("separate", None)):
+        if tag:
+            el = OxmlElement("w:fldChar")
+            el.set(qn("w:fldCharType"), tag)
+        else:
+            el = OxmlElement("w:instrText")
+            el.set(qn("xml:space"), "preserve")
+            el.text = instr
+        fld._r.append(el)
+    end = OxmlElement("w:fldChar")
+    end.set(qn("w:fldCharType"), "end")
+    p.add_run()._r.append(end)
+
     sec = doc.add_section(WD_SECTION.NEW_PAGE)
     header_footer(sec, "摘要", False)
     p = doc.add_paragraph()
@@ -354,10 +416,6 @@ def build(out):
     font(p.add_run("Key words: "), "Times New Roman", SZ["小四"], True)
     font(p.add_run(C.KEYWORDS_EN), "Times New Roman", SZ["小四"])
 
-    sec = doc.add_section(WD_SECTION.NEW_PAGE)
-    header_footer(sec, "目录", False)
-    toc(doc)
-
     first = True
     first_body_idx = None
     for item in C.BODY:
@@ -386,8 +444,8 @@ def build(out):
         elif kind == "todo":
             todo(doc, item[1])
 
-    sec = doc.add_section(WD_SECTION.NEW_PAGE)
-    header_footer(sec, "参考文献", True)
+    ref_start = doc.add_section(WD_SECTION.NEW_PAGE)
+    header_footer(ref_start, "参考文献", True)
     p = doc.add_paragraph()
     pfmt(p, 1.25, after=12, align=WD_ALIGN_PARAGRAPH.CENTER)
     font(p.add_run("参考文献"), "黑体", SZ["四号"], True)
@@ -403,8 +461,8 @@ def build(out):
         en = not re.search(r"[\u4e00-\u9fff]", ref)
         font(p.add_run(f"[{i}]  {ref}"), "宋体", SZ["小五"], en="Times New Roman")
 
-    sec = doc.add_section(WD_SECTION.NEW_PAGE)
-    header_footer(sec, "致谢", True)
+    thank_start = doc.add_section(WD_SECTION.NEW_PAGE)
+    header_footer(thank_start, "致谢", True)
     p = doc.add_paragraph()
     pfmt(p, 1.25, after=12, align=WD_ALIGN_PARAGRAPH.CENTER)
     font(p.add_run("致  谢"), "黑体", SZ["四号"], True)
@@ -416,15 +474,86 @@ def build(out):
     pfmt(p, 1.25, indent=21)
     font(p.add_run(C.THANKS), "宋体", SZ["五号"])
 
+    for title, blocks in getattr(C, "APPENDIX", []):
+        sec = doc.add_section(WD_SECTION.NEW_PAGE)
+        header_footer(sec, "附录", True)
+        p = doc.add_paragraph()
+        pfmt(p, 1.25, after=12, indent=24)
+        font(p.add_run(title), "黑体", SZ["四号"])
+        p.style = doc.styles["Heading 1"]
+        for r in p.runs:
+            r.font.color.rgb = None
+        for kind, val in blocks:
+            if kind == "p":
+                body(doc, val)
+            elif kind == "pre":
+                for ln in val.split("\n"):
+                    q = doc.add_paragraph()
+                    pfmt(q, 1.25, indent=24 if ln and not ln.startswith(("#", "-")) else 0)
+                    font(q.add_run(ln or " "), "宋体", SZ["五号"])
+            elif kind == "table":
+                table(doc, val[0], val[1], val[2])
+
+    import datetime
+    cp = doc.core_properties
+    now = datetime.datetime.now()
+    cp.author, cp.comments, cp.last_modified_by, cp.title = "", "", "", C.TITLE
+    cp.created, cp.modified, cp.revision = now, now, 1
     for i, s in enumerate(doc.sections):
         page_setup(s)
+        if i == 0:
+            s.different_first_page_header_footer = True
         if i != first_body_idx:
             for el in s._sectPr.findall(qn("w:pgNumType")):
                 s._sectPr.remove(el)
+    for name, size in (("TOC 1", SZ["小四"]), ("TOC 2", SZ["小四"])):
+        try:
+            ts = doc.styles[name]
+        except KeyError:
+            from docx.enum.style import WD_STYLE_TYPE
+            ts = doc.styles.add_style(name, WD_STYLE_TYPE.PARAGRAPH)
+        ts.font.size = Pt(size)
+        ts.font.bold = False
+        rpr = ts.element.get_or_add_rPr()
+        rf = rpr.find(qn("w:rFonts"))
+        if rf is None:
+            rf = OxmlElement("w:rFonts")
+            rpr.append(rf)
+        rf.set(qn("w:eastAsia"), "黑体" if name == "TOC 1" else "宋体")
+        ts.paragraph_format.line_spacing = 1.0
+        if name == "TOC 2":
+            ts.paragraph_format.left_indent = Pt(24)
     doc.save(out)
+    clean_package(out)
+
+
+def clean_package(out):
+    """去掉 python-docx 默认模板遗留的缩略图、空引文库 customXml 和 app.xml 里的模板程序信息。"""
+    import shutil
+    import tempfile
+    import zipfile
+    drop = {"docProps/thumbnail.jpeg", "customXml/item1.xml", "customXml/_rels/item1.xml.rels", "customXml/itemProps1.xml"}
+    tmp = tempfile.mktemp(suffix=".docx")
+    with zipfile.ZipFile(out) as zin, zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED) as zout:
+        for item in zin.infolist():
+            if item.filename in drop:
+                continue
+            data = zin.read(item.filename)
+            if item.filename == "_rels/.rels":
+                data = re.sub(rb'<Relationship [^>]*thumbnail\.jpeg"[^>]*/>', b"", data)
+            elif item.filename == "word/_rels/document.xml.rels":
+                data = re.sub(rb'<Relationship [^>]*customXml/item1\.xml"[^>]*/>', b"", data)
+            elif item.filename == "[Content_Types].xml":
+                data = re.sub(rb'<Default Extension="jpeg"[^>]*/>|<Override PartName="/customXml/itemProps1\.xml"[^>]*/>', b"", data)
+            elif item.filename == "docProps/app.xml":
+                data = re.sub(rb"<Application>[^<]*</Application>", b"<Application></Application>", data)
+                data = re.sub(rb"<Template>[^<]*</Template>", b"<Template>Normal.dotm</Template>", data)
+            zout.writestr(item, data)
+    shutil.move(tmp, out)
 
 
 if __name__ == "__main__":
+    renumber_citations()
     n_cite = check_citations()
     out = os.path.join(ROOT, "交付", "毕业论文_基于Coze智能体的法律咨询系统的设计与实现.docx")
     build(out)

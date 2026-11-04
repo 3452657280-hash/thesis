@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>讲解视频</title>
+<style>html, body { margin: 0; background: #F5F3EF; overflow: hidden; } canvas { display: block; }</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script type="module">
+// 画面只由 t 决定；所有时间点来自 timing.js（配音时长，由 motion_prep.py 生成）
+import { SCENES, SUBS, DUR } from './timing.js';
+import { seg, lerp, clamp, ease, glide, spring, mix, rgba, stageSize, setupCanvas, loadFonts } from './motion.js';
+import { makeScenes } from './scenes.js';
+
+const { W, H } = stageSize();
+const ctx = setupCanvas(document.getElementById('c'), W, H);
+const U = H / 1080, VW = W / U;                                   // 按 1080 高设计
+const C = { bg: '#F5F3EF', ink: '#1C1733', sub: '#6B6680', grey: '#CFCBD8', ghost: '#E6E2EC',
+            cell: '#FFFFFF', purple: '#4827AF', orange: '#FF4208' };
+// 英文版把字体顺序换成 "Segoe UI", "Microsoft YaHei"
+const ZH = (w, s) => `${w} ${s}px "Microsoft YaHei", "Segoe UI", sans-serif`;
+const NUM = (w, s) => `${w} ${s}px Bahnschrift, "DIN Alternate", "Segoe UI", sans-serif`;
+
+const byId = id => SCENES.find(s => s.id === id);
+const S0 = byId('s00_title');
+// 章节表：scene id → [编号, 章名]。新增/删减章节时在这里顺延编号
+const CH = { s01_pain: ['01', '为什么做这个系统'], s02_arch: ['02', '系统架构'], s03_kb: ['03', '知识库与智能体'],
+             s04_demo: ['04', '一次完整的咨询'], s05_func: ['05', '三类用户'], s06_test: ['06', '测试结果'],
+             s07_compare: ['07', '知识库的作用'] };
+
+let SC = null;
+window.DUR = DUR;
+window.render = t => {
+  ctx.save(); ctx.scale(U, U);
+  ctx.fillStyle = C.bg; ctx.fillRect(0, 0, VW, 1080);
+  const sc = SCENES.find(s => t >= s.t0 && t < s.t1) || SCENES[SCENES.length - 1];
+  const last = sc === SCENES[SCENES.length - 1];
+  // 场景末尾 0.45s：整体左移淡出，下一场的大章节标题接上（不用交叉淡化）
+  const ex = last ? 0 : ease.inCubic(seg(t, sc.t1 - 0.45, sc.t1));
+  ctx.save(); ctx.globalAlpha = 1 - ex; ctx.translate(-70 * ex, 0);
+  if (sc.id === 's00_title') drawTitle(t);
+  else {
+    if (CH[sc.id]) chapterHead(t, sc, ...CH[sc.id]);
+    if (SC[sc.id]) SC[sc.id](t, sc);
+  }
+  ctx.restore();
+  drawSubtitle(t);
+  ctx.restore();
+};
+
+// 章节标题：先大字出现在左侧，约 1s 后缩到左上角当页眉
+function chapterHead(t, sc, no, name) {
+  const k = glide(seg(t, sc.t0 + 0.05, sc.t0 + 0.7)), m = glide(seg(t, sc.t0 + 0.95, sc.t0 + 1.55));
+  const x = lerp(170, 120, m), y = lerp(430, 112, m), s = lerp(2.4, 1, m);
+  ctx.save(); ctx.globalAlpha *= k; ctx.translate(x + (1 - k) * -40, y); ctx.scale(s, s);
+  ctx.fillStyle = C.purple; ctx.fillRect(0, 0, 6, 48);
+  ctx.font = NUM(600, 32); ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left'; ctx.fillText(no, 24, 38);
+  ctx.font = ZH(700, 40); ctx.fillStyle = C.ink; ctx.fillText(name, 74, 38);
+  ctx.restore();
+  const lk = glide(seg(t, sc.t0 + 0.25, sc.t0 + 0.85)) * (1 - m);
+  if (lk > 0) {
+    const gr = ctx.createLinearGradient(170, 0, 870, 0); gr.addColorStop(0, C.purple); gr.addColorStop(1, C.orange);
+    ctx.fillStyle = gr; ctx.fillRect(170, 590, 700 * lk, 8);
+  }
+}
+
+// 片头：标题两行遮罩上推 + 渐变线（长度跟随标题宽度）+ 副标题
+function drawTitle(t) {
+  const L = S0.lines, out = ease.inCubic(seg(t, S0.t1 - 0.55, S0.t1));
+  const title = L[0].text.replace(/[。.]$/, ''), tag = (L[1]?.text || '').replace(/[。.]$/, '');
+  ctx.save(); ctx.globalAlpha = 1 - out; ctx.translate(-80 * out, 0); ctx.textBaseline = 'alphabetic';
+  const k = spring(t - 0.3, { freq: 1.6, damp: 0.95 });
+  ctx.save(); ctx.beginPath(); ctx.rect(150, 368, 1700, 140); ctx.clip();
+  ctx.font = ZH(700, 96); ctx.fillStyle = C.ink; ctx.fillText(title, 156, 480 + (1 - k) * 130);
+  const tw = ctx.measureText(title).width;
+  ctx.restore();
+  const lk = glide(seg(t, 0.8, 1.7));
+  const gr = ctx.createLinearGradient(160, 0, 160 + tw, 0); gr.addColorStop(0, C.purple); gr.addColorStop(1, C.orange);
+  ctx.fillStyle = gr; ctx.fillRect(160, 530, tw * lk, 6);
+  const tk = spring(t - (L[1]?.t0 ?? 1.5), { freq: 2.2, damp: 0.9 });
+  ctx.globalAlpha = (1 - out) * clamp(tk);
+  ctx.font = ZH(400, 44); ctx.fillStyle = C.sub; ctx.fillText(tag, 160, 620 + (1 - tk) * 18);
+  ctx.restore();
+}
+
+function roundRect(x, y, w, h, r) { if (w <= 0) return; ctx.beginPath(); ctx.roundRect(x, y, w, h, Math.min(r, w / 2, h / 2)); ctx.fill(); }
+function drawPerson(cx, cy, r, col) {
+  ctx.fillStyle = col;
+  ctx.beginPath(); ctx.arc(cx, cy - r * 0.55, r * 0.42, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(cx, cy + r * 0.62, r * 0.78, r * 0.55, 0, Math.PI, 0); ctx.fill();
+}
+
+// 字幕画在页面里：底部居中，半透明深色底
+function drawSubtitle(t) {
+  const s = SUBS.find(s => t >= s.t0 - 0.08 && t < s.t1 + 0.08);
+  if (!s) return;
+  const a = Math.min(seg(t, s.t0 - 0.08, s.t0 + 0.04), 1 - seg(t, s.t1 - 0.04, s.t1 + 0.08));
+  ctx.save(); ctx.globalAlpha = a;
+  ctx.font = ZH(400, 38); const w = ctx.measureText(s.text).width;
+  ctx.fillStyle = rgba(C.ink, 0.82); roundRect(VW / 2 - w / 2 - 28, 960, w + 56, 64, 10);
+  ctx.fillStyle = '#FFFFFF'; ctx.textAlign = 'center'; ctx.fillText(s.text, VW / 2, 1005);
+  ctx.restore();
+}
+
+const HELP = { drawPerson };
+SC = makeScenes(ctx, C, ZH, NUM, HELP);
+await Promise.all(Object.values(HELP.images || {}).map(im => im.decode().catch(() => {})));
+await loadFonts([ZH(700, 96), ZH(400, 38), NUM(700, 120), NUM(600, 32)]);
+
+window.render(0);
+window.READY = true;
+</script>
+</body>
+</html>

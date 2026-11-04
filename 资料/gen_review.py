@@ -39,8 +39,8 @@ SECTIONS = [
 REFS = [
 "中共中央办公厅, 国务院办公厅. 关于加快推进公共法律服务体系建设的意见[EB/OL]. (2019-07-10)[2026-11-03]. https://www.gov.cn/zhengce/2019-07/10/content_5408010.htm.",
 "中华人民共和国司法部. 2022年度律师、基层法律服务工作统计分析[EB/OL]. (2023-06-14)[2026-11-03]. http://www.moj.gov.cn/pub/sfbgw/zwxxgk/fdzdgknr/fdzdgknrtjxx/202306/t20230614_480740.html.",
-"龚善要. 生成式人工智能赋能公共法律服务的范式转型[J]. 东方法学, 2024(5).",
-"王禄生. ChatGPT类技术：法律人工智能的改进者还是颠覆者？[J]. 政法论坛, 2023(4).",
+"龚善要. 生成式人工智能赋能公共法律服务的范式转型[J]. 东方法学, 2024(5): 88-100.",
+"王禄生. ChatGPT类技术：法律人工智能的改进者还是颠覆者？[J]. 政法论坛, 2023, 41(4): 49-62.",
 "Dahl M, Magesh V, Suzgun M, et al. Large legal fictions: profiling legal hallucinations in large language models[J]. Journal of Legal Analysis, 2024, 16(1): 64-93.",
 "Fei Z, Shen X, Zhu D, et al. LawBench: benchmarking legal knowledge of large language models[C]//Proceedings of the 2024 Conference on Empirical Methods in Natural Language Processing. Miami: Association for Computational Linguistics, 2024: 7933-7962.",
 "Yue S, Chen W, Wang S, et al. DISC-LawLLM: fine-tuning large language models for intelligent legal services[EB/OL]. arXiv preprint arXiv:2309.11325, 2023.",

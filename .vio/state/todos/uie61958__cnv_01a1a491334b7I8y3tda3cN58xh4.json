@@ -1,0 +1,54 @@
+{
+  "todos": [
+    {
+      "id": "td_cb584581",
+      "content": "复核评判 17 题（子任务进行中）",
+      "status": "pending",
+      "priority": "medium"
+    },
+    {
+      "id": "td_6ab9efa2",
+      "content": "对照学校撰写规范：摘要压到 300-500 字/英文约1200字符",
+      "status": "completed",
+      "priority": "medium"
+    },
+    {
+      "id": "td_cad0a718",
+      "content": "司法部律师统计数据（官网无更新年度报告，保持不变）",
+      "status": "completed",
+      "priority": "medium"
+    },
+    {
+      "id": "td_4f428052",
+      "content": "附件5/6 补页码并重新生成",
+      "status": "in_progress",
+      "priority": "medium"
+    },
+    {
+      "id": "td_687c8fd4",
+      "content": "重新生成论文并验证",
+      "status": "pending",
+      "priority": "medium"
+    },
+    {
+      "id": "td_ff18a2b4",
+      "content": "编写系统启动与使用说明.md（已实测启动）",
+      "status": "completed",
+      "priority": "medium"
+    },
+    {
+      "id": "td_84bc2c6a",
+      "content": "制作答辩 PPT",
+      "status": "pending",
+      "priority": "medium"
+    },
+    {
+      "id": "td_2b307f7e",
+      "content": "编写答辩指南.md",
+      "status": "pending",
+      "priority": "medium"
+    }
+  ],
+  "updated_at": 1793767379.890087,
+  "version": 1
+}

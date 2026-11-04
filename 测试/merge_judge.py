@@ -100,3 +100,23 @@ print("\n同题对照（id, 知识库组, 对照组）：", [(r["id"], kb20[r["i
 print("外部条文引用条数合计：知识库组20题", sum(int(kb20[i]["kb_external"] or 0) for i in ids),
       "对照组", sum(int(r["kb_external"] or 0) for r in bl))
 print("\n已输出：", kb_out, bl_out)
+
+b2_judges = [f for f in ("judge_baseline2_A.csv", "judge_baseline2_B.csv") if os.path.exists(os.path.join(J, f))]
+if len(b2_judges) == 2:
+    b2, _ = merge("results_baseline2_20261104_091503.csv", b2_judges, "baseline2")
+    allbl = sorted(bl + b2, key=lambda r: int(r["id"]))
+    out = os.path.join(HERE, "results_baseline_all_judged.csv")
+    keys = list(dict.fromkeys(k for r in allbl for k in r))
+    with open(out, "w", encoding="utf-8-sig", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=keys, extrasaction="ignore")
+        w.writeheader()
+        w.writerows(allbl)
+    report(allbl, "对照组·全部50道法律题")
+    kbl = [r for r in kb if r["category"] != "非法律问题"]
+    print("知识库组50题外部条文条数", sum(int(r["kb_external"] or 0) for r in kbl),
+          "对照组50题外部条文条数", sum(int(r["kb_external"] or 0) for r in allbl))
+    km = {r["id"]: r["judge_law_correct"] for r in kbl}
+    both = [(r["id"], km[r["id"]], r["judge_law_correct"]) for r in allbl]
+    print("仅知识库组正确：", [i for i, a, b in both if a == "1" and b != "1"])
+    print("仅对照组正确：", [i for i, a, b in both if a != "1" and b == "1"])
+    print("已输出：", out)
